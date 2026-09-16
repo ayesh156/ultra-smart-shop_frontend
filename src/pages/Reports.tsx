@@ -19,10 +19,11 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
+// Added status field to match database model
 interface Invoice {
   id: string; invoiceNumber: string; type: string; total: string | number;
   subtotal: string | number; discount: string | number; tax: string | number;
-  paidAmount: string | number; paymentMethod: string; paymentStatus: string;
+  paidAmount: string | number; paymentMethod: string; paymentStatus: string; status: string;
   customerName: string | null; customerPhone: string | null; createdAt: string;
   items: Array<{ productName: string; quantity: number; unitPrice: number; costPrice?: number | string; total: number }>;
   user?: { name: string };
@@ -69,7 +70,8 @@ const Reports: React.FC = () => {
         api.get(`/invoices?from=${from}&to=${to}`),
         api.get(`/cash-drawer?from=${from}&to=${to}`)
       ]);
-      setInvoices((invRes.data.data || []).filter((i: Invoice) => i.paymentStatus !== 'VOID'));
+      // Exclude voided/cancelled invoices so reports only reflect active sales
+      setInvoices((invRes.data.data || []).filter((i: Invoice) => i.status !== 'VOID' && i.paymentStatus !== 'VOID'));
       setDrawerSessions(drawRes.data.data || []);
     } catch { toast.error('Failed to load report data'); }
     finally { setLoading(false); }

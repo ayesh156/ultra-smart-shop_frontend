@@ -24,9 +24,10 @@ interface Stats {
   lowStockCount: number;
 }
 
+// Added status field to match database model
 interface Invoice {
   id: string; invoiceNumber: string; type: string; total: string | number;
-  paymentMethod: string; paymentStatus: string; createdAt: string;
+  paymentMethod: string; paymentStatus: string; status: string; createdAt: string;
   customerName: string | null; items: Array<{ productName: string; quantity: number; total: number }>;
 }
 
@@ -71,10 +72,11 @@ const Dashboard: React.FC = () => {
             api.get('/stock/low-stock'),
           ]);
 
-        const todayInvoices: Invoice[] = (todayInv.data.data || []).filter((i: Invoice) => i.paymentStatus !== 'VOID');
-        const yesterdayInvoices: Invoice[] = (yesterdayInv.data.data || []).filter((i: Invoice) => i.paymentStatus !== 'VOID');
-        const monthInvoices: Invoice[] = (monthInv.data.data || []).filter((i: Invoice) => i.paymentStatus !== 'VOID');
-        const weekInvoices: Invoice[] = (weekInv.data.data || []).filter((i: Invoice) => i.paymentStatus !== 'VOID');
+        // Filter out voided/cancelled invoices from dashboard metrics
+        const todayInvoices: Invoice[] = (todayInv.data.data || []).filter((i: Invoice) => i.status !== 'VOID' && i.paymentStatus !== 'VOID');
+        const yesterdayInvoices: Invoice[] = (yesterdayInv.data.data || []).filter((i: Invoice) => i.status !== 'VOID' && i.paymentStatus !== 'VOID');
+        const monthInvoices: Invoice[] = (monthInv.data.data || []).filter((i: Invoice) => i.status !== 'VOID' && i.paymentStatus !== 'VOID');
+        const weekInvoices: Invoice[] = (weekInv.data.data || []).filter((i: Invoice) => i.status !== 'VOID' && i.paymentStatus !== 'VOID');
 
         const todayRevenue = todayInvoices.reduce((s, i) => s + Number(i.total), 0);
         const yesterdayRevenue = yesterdayInvoices.reduce((s, i) => s + Number(i.total), 0);
